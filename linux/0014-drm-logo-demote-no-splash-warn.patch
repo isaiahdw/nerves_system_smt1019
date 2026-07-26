@@ -1,0 +1,18 @@
+drm/rockchip: demote the no-splash "failed to parse loader memory" warn.
+
+When U-Boot passes no splash framebuffer (e.g. display disabled or
+vidconsole not in stdout), init_loader_memory() fails and the driver
+warns "failed to parse loader memory" every boot. That is a normal
+configuration, not an error — log it at debug level.
+
+--- a/drivers/gpu/drm/rockchip/rockchip_drm_logo.c	2026-07-26 13:21:39
++++ b/drivers/gpu/drm/rockchip/rockchip_drm_logo.c	2026-07-26 13:21:39
+@@ -1058,7 +1058,7 @@
+ 	}
+ 
+ 	if (init_loader_memory(drm_dev)) {
+-		dev_warn(drm_dev->dev, "failed to parse loader memory\n");
++		dev_dbg(drm_dev->dev, "failed to parse loader memory\n");
+ 		return;
+ 	}
+ 

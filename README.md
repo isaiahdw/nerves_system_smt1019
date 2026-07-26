@@ -183,7 +183,7 @@ The board support is carried as `linux/*.patch`:
 | `0011` | Keep the WiFi chip powered after module load (firmware downloads once) |
 | `0012` | Point the touch node at the mainline Goodix driver (`goodix,gt9271`, edge-falling IRQ) |
 | `0013` | Enable `usb_drd1` as a USB2 host |
-| `0014` | Drop the empty drm-logo/cubic-lut splash reserved-memory nodes (U-Boot never fills them; removes boot-time errors) |
+| `0014` | Demote the drm driver's no-splash "failed to parse loader memory" warn to debug |
 | `0015` | Rename the Mali GPU interrupts to the uppercase names kbase requests (removes probe errors) |
 | `0016` | Quiet the fiq-debugger's expected probe errors in irq mode |
 

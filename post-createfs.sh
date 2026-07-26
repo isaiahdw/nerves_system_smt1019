@@ -17,9 +17,14 @@ DTB="${BINARIES_DIR}/rk3576s-r157-v2.0-wf1019-linux.dtb"
 LOGO_DIR="${NERVES_DEFCONFIG_DIR}/uboot/logo"
 if [ -f "${RESOURCE_TOOL_SRC}" ] && [ -f "${DTB}" ]; then
     cc -O2 -o "${BUILD_DIR}/resource_tool" "${RESOURCE_TOOL_SRC}"
+    # resource_tool stores non-dtb entries under EXACTLY the path given on
+    # the command line (only dtbs are renamed to rk-kernel.dtb). U-Boot
+    # looks up the entry named "logo.bmp", so the BMPs must be passed as
+    # bare filenames from the pack directory or the lookup never matches.
+    cp -f "${LOGO_DIR}/logo.bmp" "${LOGO_DIR}/logo_kernel.bmp" "${BINARIES_DIR}/"
     (cd "${BINARIES_DIR}" && "${BUILD_DIR}/resource_tool" --pack \
         --image=resource.img \
-        "${DTB}" "${LOGO_DIR}/logo.bmp" "${LOGO_DIR}/logo_kernel.bmp")
+        "${DTB}" logo.bmp logo_kernel.bmp)
     echo "post-createfs: packed resource.img ($(wc -c < ${BINARIES_DIR}/resource.img) bytes)"
 else
     echo "post-createfs: ERROR: resource_tool source or dtb missing; cannot pack resource.img"

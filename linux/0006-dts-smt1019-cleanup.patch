@@ -24,9 +24,9 @@
 +
 +/* Cleanup for the SMT1019: the camera dtsi include above was dropped (no
 + * sensor fitted; the rkcif/rkisp/rkvpss pipeline only produced probe-error
-+ * spam). The empty drm-logo/cubic-lut reserved-memory nodes are removed
-+ * by patch 0014 (U-Boot never fills them); the panel keeps scanning the
-+ * U-Boot splash until a DRM client takes over. */
++ * spam). The drm-logo reserved-memory nodes are KEPT: U-Boot's display
++ * fixup fills them with the splash framebuffer (needs stdout=vidconsole
++ * in the env) and the kernel holds it until a DRM client takes over. */
 +
 +/* i2c4 hosts the STK3311 ALS/proximity sensor (light@48, userspace-driven).
 + * The bus enable used to come from the camera dtsi dropped above. */

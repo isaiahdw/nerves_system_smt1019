@@ -1,0 +1,104 @@
+BR2_aarch64=y
+BR2_cortex_a72=y
+BR2_TOOLCHAIN_EXTERNAL=y
+BR2_TOOLCHAIN_EXTERNAL_CUSTOM=y
+BR2_TOOLCHAIN_EXTERNAL_DOWNLOAD=y
+BR2_TOOLCHAIN_EXTERNAL_URL="https://github.com/nerves-project/toolchains/releases/download/v15.3.0/nerves_toolchain_aarch64_nerves_linux_gnu-linux_${shell uname -m}-15.3.0-8DAF9F3.tar.xz"
+BR2_TOOLCHAIN_EXTERNAL_CUSTOM_PREFIX="aarch64-nerves-linux-gnu"
+BR2_TOOLCHAIN_EXTERNAL_HEADERS_6_0=y
+BR2_TOOLCHAIN_EXTERNAL_CUSTOM_GLIBC=y
+# BR2_TOOLCHAIN_EXTERNAL_INET_RPC is not set
+BR2_TOOLCHAIN_EXTERNAL_CXX=y
+BR2_TOOLCHAIN_EXTERNAL_FORTRAN=y
+BR2_TOOLCHAIN_EXTERNAL_OPENMP=y
+BR2_TAR_OPTIONS="--no-same-owner"
+BR2_BACKUP_SITE="https://dl.nerves-project.org"
+BR2_ENABLE_DEBUG=y
+BR2_GLOBAL_PATCH_DIR="${BR2_EXTERNAL_NERVES_PATH}/patches"
+BR2_REPRODUCIBLE=y
+BR2_ROOTFS_SKELETON_CUSTOM=y
+BR2_ROOTFS_SKELETON_CUSTOM_PATH="${BR2_EXTERNAL_NERVES_PATH}/board/nerves-common/skeleton"
+BR2_INIT_NONE=y
+BR2_ROOTFS_DEVICE_TABLE="${BR2_EXTERNAL_NERVES_PATH}/board/nerves-common/device_table.txt"
+BR2_ENABLE_LOCALE_WHITELIST="locale-archive"
+BR2_GENERATE_LOCALE="en_US.UTF-8"
+BR2_ROOTFS_OVERLAY="${BR2_EXTERNAL_NERVES_PATH}/board/nerves-common/rootfs_overlay ${NERVES_DEFCONFIG_DIR}/rootfs_overlay"
+BR2_ROOTFS_POST_BUILD_SCRIPT="${NERVES_DEFCONFIG_DIR}/post-build.sh ${BR2_EXTERNAL_NERVES_PATH}/board/nerves-common/post-build.sh"
+BR2_ROOTFS_POST_IMAGE_SCRIPT="${NERVES_DEFCONFIG_DIR}/post-createfs.sh"
+BR2_LINUX_KERNEL=y
+BR2_LINUX_KERNEL_CUSTOM_TARBALL=y
+# armbian/linux-rockchip branch rk-6.1-rkr5.1 (Rockchip BSP 6.1 + stable
+# merges + Armbian fixes; kernel 6.1.115), pinned to the 2026-07-15 tip.
+# Same BSP lineage as the old SDK tarball; the board delta (r157 dts,
+# vendor gt9xx) is carried as patches in linux/. See README.md.
+BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION="https://github.com/armbian/linux-rockchip/archive/5280f9b4336199c4025c8eed894d2b4e2268dcc6.tar.gz"
+BR2_LINUX_KERNEL_PATCH="${NERVES_DEFCONFIG_DIR}/linux"
+# Same config the vendor build uses (rockchip_linux_defconfig + rk3576.config
+# Mali fragment) plus Nerves requirements.
+BR2_LINUX_KERNEL_USE_DEFCONFIG=y
+BR2_LINUX_KERNEL_DEFCONFIG="rockchip_linux"
+BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="${NERVES_DEFCONFIG_DIR}/linux/rk3576.config ${NERVES_DEFCONFIG_DIR}/linux/nerves.config"
+BR2_LINUX_KERNEL_DTS_SUPPORT=y
+# The SMT1019's device tree (the vendor's make-kernel-rk3576s-r157-v10A-wf-mipi.sh
+# copies this over the evb1 dts; we build it under its real name). The .dtb
+# basename must match the devicetree.dtb resource in fwup.conf.
+BR2_LINUX_KERNEL_INTREE_DTS_NAME="rockchip/rk3576s-r157-v2.0-wf1019-linux"
+BR2_LINUX_KERNEL_NEEDS_HOST_OPENSSL=y
+BR2_PACKAGE_BUSYBOX_CONFIG="${BR2_EXTERNAL_NERVES_PATH}/board/nerves-common/busybox.config"
+BR2_PACKAGE_BUSYBOX_CONFIG_FRAGMENT_FILES="${NERVES_DEFCONFIG_DIR}/busybox.fragment"
+BR2_PACKAGE_F2FS_TOOLS=y
+BR2_PACKAGE_CA_CERTIFICATES=y
+BR2_PACKAGE_DTC=y
+BR2_PACKAGE_LIBMNL=y
+BR2_PACKAGE_WIRELESS_REGDB=y
+BR2_PACKAGE_WPA_SUPPLICANT=y
+BR2_PACKAGE_WPA_SUPPLICANT_WIRED=y
+BR2_PACKAGE_WPA_SUPPLICANT_AP_SUPPORT=y
+BR2_PACKAGE_WPA_SUPPLICANT_AUTOSCAN=y
+BR2_PACKAGE_WPA_SUPPLICANT_HOTSPOT=y
+BR2_PACKAGE_WPA_SUPPLICANT_DEBUG_SYSLOG=y
+BR2_PACKAGE_WPA_SUPPLICANT_WPS=y
+BR2_PACKAGE_WPA_SUPPLICANT_WPA3=y
+BR2_PACKAGE_WPA_SUPPLICANT_CTRL_IFACE=y
+# BR2_TARGET_ROOTFS_TAR is not set
+BR2_PACKAGE_HOST_KMOD_XZ=y
+# uboot-env.bin is generated from uboot/uboot.env; the U-Boot blobs
+# themselves are prebuilt and committed (see uboot/README.md).
+BR2_PACKAGE_HOST_UBOOT_TOOLS=y
+BR2_PACKAGE_HOST_UBOOT_TOOLS_ENVIMAGE=y
+BR2_PACKAGE_HOST_UBOOT_TOOLS_ENVIMAGE_SOURCE="${NERVES_DEFCONFIG_DIR}/uboot/uboot.env"
+BR2_PACKAGE_HOST_UBOOT_TOOLS_ENVIMAGE_SIZE="131072"
+BR2_NERVES_SYSTEM_NAME="nerves_system_smt1019"
+BR2_NERVES_ADDITIONAL_IMAGE_FILES="${NERVES_DEFCONFIG_DIR}/fwup.conf ${NERVES_DEFCONFIG_DIR}/extlinux-a.conf ${NERVES_DEFCONFIG_DIR}/extlinux-b.conf ${NERVES_DEFCONFIG_DIR}/uboot/idbloader.img ${NERVES_DEFCONFIG_DIR}/uboot/u-boot-env.itb ${NERVES_DEFCONFIG_DIR}/uboot/u-boot.itb"
+BR2_PACKAGE_NBTTY=y
+BR2_PACKAGE_NERVES_CONFIG=y
+BR2_PACKAGE_NERVES_CONFIG_ACCEPT_RNG_NOTICE=y
+BR2_PACKAGE_AP6281_FIRMWARE=y
+# GPU: proprietary Mali userspace + a KMS GL smoke test
+BR2_PACKAGE_LIBMALI=y
+BR2_PACKAGE_KMSCUBE=y
+# Input: eudev (dynamic /dev, plus the udev rules in rootfs_overlay that
+# retag the Goodix touchscreen as ID_INPUT_TOUCHSCREEN and apply its
+# rotation calibration matrix) and libinput, the input layer DRM/KMS UI
+# stacks read touch through. No UI toolkit ships in the system — bring
+# your own (a Flutter embedder, LVGL, Slint, Qt, ...) from the
+# application side; kmscube above verifies the DRM/KMS + GPU path.
+BR2_ROOTFS_DEVICE_CREATION_DYNAMIC_EUDEV=y
+BR2_PACKAGE_LIBINPUT=y
+# Audio: ES8323 codec (card0) + PDM mic (card1). ALSA userspace:
+# aplay/arecord/amixer/alsactl + speaker-test.
+BR2_PACKAGE_ALSA_LIB=y
+BR2_PACKAGE_ALSA_UTILS=y
+BR2_PACKAGE_ALSA_UTILS_APLAY=y
+BR2_PACKAGE_ALSA_UTILS_AMIXER=y
+BR2_PACKAGE_ALSA_UTILS_ALSACTL=y
+BR2_PACKAGE_ALSA_UTILS_SPEAKER_TEST=y
+# alsa-plugins provides the `type ladspa` PCM host; smt-audio-dsp is our custom
+# LADSPA high-pass + soft-limiter plugin for the 2 W speaker (selects
+# alsa-plugins). Chained in /etc/asound.conf so all playback is filtered.
+# libsamplerate gives alsa-plugins a real rate converter: without it, 44.1k
+# MP3s hit alsa-lib's built-in linear interpolator on the way to the fixed
+# 48k dmix and sound metallic/aliased.
+BR2_PACKAGE_LIBSAMPLERATE=y
+BR2_PACKAGE_ALSA_PLUGINS=y
+BR2_PACKAGE_SMT_AUDIO_DSP=y

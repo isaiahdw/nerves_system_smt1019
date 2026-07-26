@@ -1,0 +1,5 @@
+# Add project-specific packages for Buildroot here
+
+source "$NERVES_DEFCONFIG_DIR/package/ap6281-firmware/Config.in"
+source "$NERVES_DEFCONFIG_DIR/package/libmali/Config.in"
+source "$NERVES_DEFCONFIG_DIR/package/smt-audio-dsp/Config.in"

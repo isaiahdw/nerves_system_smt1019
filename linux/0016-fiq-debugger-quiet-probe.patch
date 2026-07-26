@@ -1,0 +1,39 @@
+fiq_debugger: quiet the expected probe errors in irq mode.
+
+With rockchip,irq-mode-enable = <1> the fiq-debugger platform device
+has a "uart_irq" resource and deliberately no "fiq"/"wakeup" IRQs, but
+the probe looks them up with platform_get_irq_byname(), which logs an
+error for each. The NMI request also predictably fails on this
+configuration (arm64 GIC without pseudo-NMI) before falling back to a
+normal irq that works. Use the _optional lookups and log the NMI
+fallback at info level.
+
+--- a/drivers/soc/rockchip/fiq_debugger/fiq_debugger.c	2026-07-26 11:34:15
++++ b/drivers/soc/rockchip/fiq_debugger/fiq_debugger.c	2026-07-26 13:21:39
+@@ -1471,7 +1471,7 @@
+ 	    (!pdata->uart_enable && pdata->uart_disable))
+ 		return -EINVAL;
+ 
+-	fiq = platform_get_irq_byname(pdev, "fiq");
++	fiq = platform_get_irq_byname_optional(pdev, "fiq");
+ 	uart_irq = platform_get_irq_byname(pdev, "uart_irq");
+ 
+ #ifndef CONFIG_ARCH_ROCKCHIP
+@@ -1495,7 +1495,7 @@
+ 	state->fiq = fiq;
+ 	state->uart_irq = uart_irq;
+ 	state->signal_irq = platform_get_irq_byname(pdev, "signal");
+-	state->wakeup_irq = platform_get_irq_byname(pdev, "wakeup");
++	state->wakeup_irq = platform_get_irq_byname_optional(pdev, "wakeup");
+ 
+ 	INIT_WORK(&state->work, fiq_debugger_work);
+ 	spin_lock_init(&state->work_lock);
+@@ -1563,7 +1563,7 @@
+ 		else
+ 			ret = -EINVAL;
+ 		if (ret) {
+-			pr_err("%s: could not install nmi irq handler\n", __func__);
++			pr_info("%s: no nmi irq, using normal irq handler\n", __func__);
+ 			irq_clear_status_flags(state->uart_irq, IRQ_NOAUTOEN);
+ 			ret = request_irq(state->uart_irq, fiq_debugger_uart_irq,
+ 					  IRQF_NO_SUSPEND | IRQF_NOBALANCING, "debug", state);

@@ -1,0 +1,18 @@
+dts: rename the Mali GPU interrupts to the names kbase requests.
+
+The vendor Mali kbase driver requests its IRQs by the names "JOB",
+"MMU" and "GPU"; the tree's gpu node names them lowercase, so every
+boot logs three "IRQ ... not found" errors before kbase falls back to
+the lowercase names. Rename to the uppercase set kbase tries first.
+
+--- a/arch/arm64/boot/dts/rockchip/rk3576.dtsi	2026-07-26 11:34:15
++++ b/arch/arm64/boot/dts/rockchip/rk3576.dtsi	2026-07-26 11:34:15
+@@ -2668,7 +2668,7 @@
+ 		interrupts = <GIC_SPI 349 IRQ_TYPE_LEVEL_HIGH>,
+ 			<GIC_SPI 348 IRQ_TYPE_LEVEL_HIGH>,
+ 			<GIC_SPI 347 IRQ_TYPE_LEVEL_HIGH>;
+-		interrupt-names = "gpu", "mmu", "job";
++		interrupt-names = "GPU", "MMU", "JOB";
+ 
+ 		upthreshold = <40>;
+ 		downdifferential = <10>;

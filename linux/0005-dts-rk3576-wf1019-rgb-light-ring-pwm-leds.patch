@@ -1,0 +1,73 @@
+From: Nerves system for the SMT1019
+Subject: [PATCH] dts: rk3576 wf1019: RGB light ring via mainline pwm-leds
+
+The board's RGB "light ring" is three channels of pwm2 (the 8-channel block
+at 0x2ade_0000): red on ch6 (pwm@2ade6000), green on ch2 (pwm@2ade2000) and
+blue on ch5 (pwm@2ade5000). rk3576s-evb-r157.dtsi already enables all three
+on the pwm2 "m1" pin mux and describes the LED with the out-of-tree vendor
+"pwm-four-leds" driver (/dev/ledjni), which caps each channel at 16 brightness
+levels and needs userspace temporal dithering for smooth fades.
+
+Delete that vendor node and re-add it with the mainline leds-pwm binding, so
+each channel gets native PWM-resolution brightness (0-255) at
+/sys/class/leds/{red,green,blue} with no dithering.
+
+The LED power rail is gated by gpio4 RK_PC7: the vendor driver drove that pin
+high in its probe() to power the ring (and low to cut it). leds-pwm has no
+concept of an enable GPIO, so hog the pin high at boot instead. Confirmed on
+hardware: with the pin high, all three channels light in the correct colors;
+with it low (leds-pwm's default), the ring stays dark regardless of PWM duty.
+
+--- a/arch/arm64/boot/dts/rockchip/rk3576s-r157-v2.0-wf1019-linux.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3576s-r157-v2.0-wf1019-linux.dts
+@@ -829,3 +829,50 @@
+ &wdt {
+ 	status = "okay";
+ };
++
++/*
++ * RGB light ring: the base rk3576s-evb-r157.dtsi describes this LED with the
++ * out-of-tree "pwm-four-leds" driver (/dev/ledjni, 16 levels per channel).
++ * Replace that node with the mainline leds-pwm binding for native 0-255
++ * brightness per channel at /sys/class/leds/{red,green,blue} (no userspace
++ * dithering). The pwm2 channels (ch6=red @2ade6000, ch2=green @2ade2000,
++ * ch5=blue @2ade5000) are already enabled on the m1 pin mux by evb-r157.dtsi.
++ *
++ * The LED power rail is gated by gpio4 RK_PC7: the vendor driver drove it high
++ * in probe() to enable the ring. leds-pwm has no notion of an enable GPIO, so
++ * hog that pin high at boot instead.
++ */
++&gpio4 {
++	led_ring_power_hog {
++		gpio-hog;
++		gpios = <RK_PC7 GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "led-ring-power";
++	};
++};
++
++/ {
++	/delete-node/ pwmleds;
++
++	pwmleds {
++		compatible = "pwm-leds";
++
++		led_ring_red {
++			label = "red";
++			pwms = <&pwm2_8ch_6 0 1000000 0>;
++			max-brightness = <255>;
++		};
++
++		led_ring_green {
++			label = "green";
++			pwms = <&pwm2_8ch_2 0 1000000 0>;
++			max-brightness = <255>;
++		};
++
++		led_ring_blue {
++			label = "blue";
++			pwms = <&pwm2_8ch_5 0 1000000 0>;
++			max-brightness = <255>;
++		};
++	};
++};

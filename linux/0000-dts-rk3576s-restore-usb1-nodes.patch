@@ -1,0 +1,29 @@
+rk3576s: restore USB controller 1 (u2phy1/combphy1/usb_drd1), matching the SDK.
+
+The armbian rk-6.1-rkr5.1 rk3576s.dtsi still /delete-node/s combphy1_psu,
+usb_drd1_dwc3, u2phy1_otg and u2phy1 on the RK3576S variant. The newer
+Rockchip BSP drop the SMT1019 SDK ships (and the board's working kernel)
+removed those deletes -- the S variant does have USB1, and the board dtsi
+sets u2phy1 status = "okay". Without this, the board dts fails to compile
+("Label or path u2phy1 not found"). This is the SDK's rk3576s.dtsi delta
+verbatim (4 delete-node lines removed).
+
+diff -urN a/arch/arm64/boot/dts/rockchip/rk3576s.dtsi b/arch/arm64/boot/dts/rockchip/rk3576s.dtsi
+--- a/arch/arm64/boot/dts/rockchip/rk3576s.dtsi	2026-07-21 21:22:01
++++ b/arch/arm64/boot/dts/rockchip/rk3576s.dtsi	2026-07-21 21:22:01
+@@ -45,7 +45,6 @@
+ 
+ /delete-node/ &can0;
+ /delete-node/ &can1;
+-/delete-node/ &combphy1_psu;
+ /delete-node/ &dsi_in_vopl;
+ /delete-node/ &dsmc;
+ /delete-node/ &dsmc_slave;
+@@ -61,7 +60,4 @@
+ /delete-node/ &rgb_in_vopl;
+ /delete-node/ &sata0;
+ /delete-node/ &sata1;
+-/delete-node/ &usb_drd1_dwc3;
+-/delete-node/ &u2phy1_otg;
+-/delete-node/ &u2phy1;
+ /delete-node/ &vopl;

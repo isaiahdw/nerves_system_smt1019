@@ -1,0 +1,21 @@
+bcmdhd: keep the chip powered after module load (single fw download).
+
+The Android lifecycle downloads the 955KB firmware at insmod, powers the
+chip off, then powers up and downloads again at interface-up -- ~1.5-2s
+of wasted boot time on an always-on device. Enable the driver's own
+supported mode for this (the CONFIG_BCMDHD_NO_POWER_OFF define pair):
+the chip stays up after insmod and ifup reuses the loaded firmware.
+
+diff -urN a/drivers/net/wireless/rockchip_wlan/rkwifi/bcmdhd/Makefile b/drivers/net/wireless/rockchip_wlan/rkwifi/bcmdhd/Makefile
+--- a/drivers/net/wireless/rockchip_wlan/rkwifi/bcmdhd/Makefile	2026-07-22 10:20:23
++++ b/drivers/net/wireless/rockchip_wlan/rkwifi/bcmdhd/Makefile	2026-07-22 10:20:23
+@@ -65,7 +65,8 @@
+ 	-DUSE_NEW_RSPEC_DEFS                                                  \
+ 	-DWL_EXT_IAPSTA -DWL_ESCAN -DCCODE_LIST -DSUSPEND_EVENT               \
+ 	-DKEY_INSTALL_CHECK                                                   \
+-	-DENABLE_INSMOD_NO_FW_LOAD
++	-DENABLE_INSMOD_NO_FW_LOAD \
++	-DENABLE_INSMOD_NO_POWER_OFF -DNO_POWER_OFF_AFTER_OPEN
+ 
+ DHDCFLAGS += -Wframe-larger-than=2048
+ 

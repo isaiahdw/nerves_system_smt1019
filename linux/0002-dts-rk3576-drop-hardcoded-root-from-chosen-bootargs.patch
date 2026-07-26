@@ -1,0 +1,21 @@
+From: Nerves system for the SMT1019
+Subject: [PATCH] dts: rk3576: drop hardcoded root= from chosen bootargs
+
+The vendor U-Boot merges the DTB's /chosen/bootargs with the bootargs
+from the extlinux APPEND line, and the DTB's root=PARTUUID=614e0000-0000
+wins over the root= we pass. That PARTUUID only exists on Rockchip's
+stock parameter.txt GPT layout, so boot hangs at "Waiting for root
+device". Remove root=/rw/rootwait from the DTB so the extlinux config
+fully controls the root device — required for Nerves A/B slot booting.
+
+--- a/arch/arm64/boot/dts/rockchip/rk3576-linux.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3576-linux.dtsi
+@@ -12,7 +12,7 @@
+ 	};
+
+ 	chosen: chosen {
+-		bootargs = "earlycon=uart8250,mmio32,0x2ad40000 console=ttyFIQ0 root=PARTUUID=614e0000-0000 rw rootwait rcupdate.rcu_expedited=1 rcu_nocbs=all";
++		bootargs = "earlycon=uart8250,mmio32,0x2ad40000 console=ttyFIQ0 rcupdate.rcu_expedited=1 rcu_nocbs=all";
+ 	};
+
+ 	fiq_debugger: fiq-debugger {

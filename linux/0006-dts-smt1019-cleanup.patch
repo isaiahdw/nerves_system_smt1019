@@ -1,0 +1,49 @@
+--- a/arch/arm64/boot/dts/rockchip/rk3576s-r157-v2.0-wf1019-linux.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3576s-r157-v2.0-wf1019-linux.dts
+@@ -9,7 +9,6 @@
+ #include "rk3576s.dtsi"
+ #include "rk3576s-evb-r157.dtsi"
+ #include "rk3576-rk806.dtsi"
+-#include "rk3576-r157-cam.dtsi"
+ //#include "rk3576-r141-rk628.dtsi"
+ //#include "rk3576-evb1-cam-dcphy0.dtsi"
+ #include "rk3576-linux.dtsi"
+@@ -762,7 +761,7 @@
+ };
+ 
+ &wireless_wlan {
+-	wifi_chip_type = "aic8800";
++	wifi_chip_type = "ap6281s";
+ 	/delete-property/ WIFI,poweren_gpio;
+ 	status = "okay";
+ };
+@@ -876,3 +875,17 @@
+ 		};
+ 	};
+ };
++
++/* Cleanup for the SMT1019: the camera dtsi include above was dropped (no
++ * sensor fitted; the rkcif/rkisp/rkvpss pipeline only produced probe-error
++ * spam). The empty drm-logo/cubic-lut reserved-memory nodes are removed
++ * by patch 0014 (U-Boot never fills them); the panel keeps scanning the
++ * U-Boot splash until a DRM client takes over. */
++
++/* i2c4 hosts the STK3311 ALS/proximity sensor (light@48, userspace-driven).
++ * The bus enable used to come from the camera dtsi dropped above. */
++&i2c4 {
++	status = "okay";
++	pinctrl-0 = <&i2c4m3_xfer>;
++	clock-frequency = <400000>;
++};
+--- a/arch/arm64/boot/dts/rockchip/lcd/lcd-SQ101E-Q4EI409-39C501.dtsi
++++ b/arch/arm64/boot/dts/rockchip/lcd/lcd-SQ101E-Q4EI409-39C501.dtsi
+@@ -3,7 +3,8 @@
+ 
+ 	dsi_panel: panel@0 {
+ 		status = "disabled";
+-		compatible = "simple-panel-dsi";
++		compatible = "simple-panel-dsi";
++		bpc = <8>;
+ 		reg = <0>;
+ 
+ 		backlight = <&backlight>;

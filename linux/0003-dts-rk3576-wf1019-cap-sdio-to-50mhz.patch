@@ -1,0 +1,31 @@
+From: Nerves system for the SMT1019
+Subject: [PATCH] dts: rk3576 wf1019: cap WiFi SDIO bus at 50 MHz high-speed
+
+At the dts-requested 200 MHz SDR104 the WiFi SDIO link is unstable on this
+hardware: tuning fails ("dwmmc_rockchip 2a320000.mmc: All phases bad!",
+"mmc2: tuning execution failed: -5") and the bus collapses after a short
+period of traffic (bcmsdh_sdmmc write errors -110/-84/-5, endless
+"dhdsdio_htclk: HT Avail timeout"), killing wpa_supplicant/DHCP mid-flight.
+
+Cap the bus at 50 MHz high-speed mode, which involves no tuning. Plenty of
+bandwidth for the AP6281S radio; stability over throughput during bring-up.
+
+--- a/arch/arm64/boot/dts/rockchip/rk3576s-r157-v2.0-wf1019-linux.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3576s-r157-v2.0-wf1019-linux.dts
+@@ -745,7 +745,7 @@
+ };
+
+ &sdio {
+-	max-frequency = <200000000>;
++	max-frequency = <50000000>;
+ 	no-sd;
+ 	no-mmc;
+ 	bus-width = <4>;
+@@ -757,7 +757,6 @@
+ 	non-removable;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&sdmmc1m0_bus4 &sdmmc1m0_clk &sdmmc1m0_cmd>;
+-	sd-uhs-sdr104;
+ 	vcc-supply = <&wifi_pwr>;
+ 	status = "okay";
+ };

@@ -1,0 +1,49 @@
+bcmdhd: make errors-only logging actually possible.
+
+The driver's ~150-line boot/ifup chatter ignored the *_msg_level=1
+(errors only) modparams because the vendor aliased the MSG bits onto the
+ERROR bits: ANDROID_MSG_LEVEL and CONFIG_MSG_LEVEL were both (1 << 0) ==
+their respective ERROR levels. Give MSG its own bit in each, and demote
+dhd_static_buf's unconditional pr_err progress prints to pr_debug
+(DHD_STATIC_ERROR stays pr_err). With the load-wifi-modules params this
+leaves only genuine errors plus the DHD_ERROR-gated banners.
+
+diff -urN a/drivers/net/wireless/rockchip_wlan/rkwifi/bcmdhd/dhd_config.c b/drivers/net/wireless/rockchip_wlan/rkwifi/bcmdhd/dhd_config.c
+--- a/drivers/net/wireless/rockchip_wlan/rkwifi/bcmdhd/dhd_config.c	2026-07-22 09:46:56
++++ b/drivers/net/wireless/rockchip_wlan/rkwifi/bcmdhd/dhd_config.c	2026-07-22 09:46:56
+@@ -40,7 +40,8 @@
+ /* message levels */
+ #define CONFIG_ERROR_LEVEL	(1 << 0)
+ #define CONFIG_TRACE_LEVEL	(1 << 1)
+-#define CONFIG_MSG_LEVEL	(1 << 0)
++/* MSG gets its own bit (vendor aliased it onto the ERROR bit). */
++#define CONFIG_MSG_LEVEL	(1 << 2)
+ 
+ uint config_msg_level = CONFIG_ERROR_LEVEL | CONFIG_MSG_LEVEL;
+ uint dump_msg_level = 0;
+diff -urN a/drivers/net/wireless/rockchip_wlan/rkwifi/bcmdhd/dhd_static_buf.c b/drivers/net/wireless/rockchip_wlan/rkwifi/bcmdhd/dhd_static_buf.c
+--- a/drivers/net/wireless/rockchip_wlan/rkwifi/bcmdhd/dhd_static_buf.c	2026-07-22 09:46:56
++++ b/drivers/net/wireless/rockchip_wlan/rkwifi/bcmdhd/dhd_static_buf.c	2026-07-22 09:46:56
+@@ -15,7 +15,7 @@
+ #define DHD_STATIC_MSG(x, args...) \
+ do { \
+ 	if (static_msg_level & STATIC_MSG_LEVEL) { \
+-		pr_err("[dhd] STATIC-MSG) %s : " x, __func__, ## args); \
++		pr_debug("[dhd] STATIC-MSG) %s : " x, __func__, ## args); \
+ 	} \
+ } while (0)
+ #define DHD_STATIC_ERROR(x, args...) \
+diff -urN a/drivers/net/wireless/rockchip_wlan/rkwifi/bcmdhd/wl_android.h b/drivers/net/wireless/rockchip_wlan/rkwifi/bcmdhd/wl_android.h
+--- a/drivers/net/wireless/rockchip_wlan/rkwifi/bcmdhd/wl_android.h	2026-07-22 09:46:56
++++ b/drivers/net/wireless/rockchip_wlan/rkwifi/bcmdhd/wl_android.h	2026-07-22 09:46:56
+@@ -91,7 +91,9 @@
+ #define ANDROID_AMPDU_LEVEL	(1 << 9)
+ #define ANDROID_TVPM_LEVEL	(1 << 10)
+ #define ANDROID_BTC_LEVEL	(1 << 11)
+-#define ANDROID_MSG_LEVEL	(1 << 0)
++/* MSG gets its own bit (vendor aliased it onto the ERROR bit, making
++ * error-only logging via the android_msg_level modparam impossible). */
++#define ANDROID_MSG_LEVEL	(1 << 5)
+ 
+ #define WL_MSG(name, arg1, args...) \
+ 	do { \

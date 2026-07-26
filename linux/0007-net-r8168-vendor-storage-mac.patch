@@ -1,0 +1,65 @@
+r8168: stable MAC from Rockchip vendor storage (deferred probe).
+
+The board's RTL8168 has no EEPROM, so eth0 got a fresh random MAC every
+boot. Read the persistent MAC from Rockchip vendor storage (LAN_MAC_ID),
+generating and persisting one on a virgin device. The probe defers
+(bounded, 30 tries) until the vendor-storage backend registers: an
+in-probe wait was tried first and lost the init race on real boots
+regardless of duration. Ported from the idea in the SDK's r8168 8.055.00
+(armbian carries 8.051.02 without it); gated on the chip MAC being
+invalid so EEPROM-programmed units are untouched.
+
+diff -urN a/drivers/net/ethernet/realtek/r8168/r8168_n.c b/drivers/net/ethernet/realtek/r8168/r8168_n.c
+--- a/drivers/net/ethernet/realtek/r8168/r8168_n.c	2026-07-21 23:14:38
++++ b/drivers/net/ethernet/realtek/r8168/r8168_n.c	2026-07-21 23:14:38
+@@ -42,6 +42,7 @@
+ 
+ #include <linux/module.h>
+ #include <linux/version.h>
++#include <linux/soc/rockchip/rk_vendor_storage.h>
+ #include <linux/pci.h>
+ #include <linux/netdevice.h>
+ #include <linux/etherdevice.h>
+@@ -25474,6 +25475,23 @@
+                 }
+         }
+ 
++        /* MAC from Rockchip vendor storage (see the EPROBE_DEFER above):
++         * read the persistent MAC; on a virgin device generate one and
++         * persist it so the address is stable across reboots. */
++        if (!is_valid_ether_addr(mac_addr) && is_rk_vendor_ready()) {
++                u8 vmac[MAC_ADDR_LEN];
++                int vret;
++
++                vret = rk_vendor_read(LAN_MAC_ID, vmac, MAC_ADDR_LEN);
++                if (vret != MAC_ADDR_LEN || !is_valid_ether_addr(vmac)) {
++                        eth_random_addr(vmac);
++                        if (rk_vendor_write(LAN_MAC_ID, vmac, MAC_ADDR_LEN))
++                                netif_warn(tp, probe, dev,
++                                           "vendor storage MAC write failed\n");
++                }
++                ether_addr_copy(mac_addr, vmac);
++        }
++
+         if (!is_valid_ether_addr(mac_addr)) {
+                 netif_err(tp, probe, dev, "Invalid ether addr %pM\n",
+                           mac_addr);
+@@ -26980,6 +26998,18 @@
+         assert(ent != NULL);
+ 
+         board_idx++;
++
++        /* The chip has no MAC EEPROM; the persistent MAC lives in Rockchip
++         * vendor storage, whose driver may not have registered yet. Defer
++         * instead of waiting in-probe (an in-probe wait was observed racing
++         * and losing regardless of duration). Bounded so a broken vendor
++         * storage still yields a (random-MAC) working interface. */
++        {
++                static int vendor_defer_count;
++
++                if (!is_rk_vendor_ready() && vendor_defer_count++ < 30)
++                        return -EPROBE_DEFER;
++        }
+ 
+         if (netif_msg_drv(&debug))
+                 printk(KERN_INFO "%s Gigabit Ethernet driver %s loaded\n",

@@ -1,0 +1,19 @@
+From: Nerves system for the SMT1019
+Subject: [PATCH] dts: rk3576 wf1019: enable the DW watchdog
+
+The SoC dtsi declares watchdog@2ace0000 (snps,dw-wdt) but leaves it
+disabled and no board dts enables it, so /dev/watchdog0 never appears
+and Erlang heart runs without a hardware watchdog. Enable it; the
+kernel builds with WATCHDOG_NOWAYOUT so it cannot be disarmed once
+heart opens it.
+
+--- a/arch/arm64/boot/dts/rockchip/rk3576s-r157-v2.0-wf1019-linux.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3576s-r157-v2.0-wf1019-linux.dts
+@@ -826,3 +826,7 @@
+ &vp0 {
+ 	status = "okay";
+ };
++
++&wdt {
++	status = "okay";
++};

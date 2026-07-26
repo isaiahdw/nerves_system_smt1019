@@ -1,0 +1,24 @@
+# bcmdhd runtime config for the SMT1019 (stationary, mains-powered
+# smart-home panel). The driver prefers this chip-specific file over the
+# generic config.txt (vendor's, kept for reference) and does NOT merge
+# them, so vendor keys worth keeping are carried forward here.
+# Keys are case-sensitive (PM= is uppercase); see dhd_config.c.
+
+# Powersave off (CAM) on mains power -- carried from the vendor config.
+PM=0
+
+# Stationary device, single AP: firmware roaming off. Background roam
+# scans cause periodic latency spikes; wpa_supplicant still handles
+# reconnects on real link loss.
+roam_off=1
+roam_off_suspend=1
+
+# Carried from the vendor config: 120s firmware keepalive (holds NAT/AP
+# state through idle) and gratuitous ARP on link-up.
+keep_alive_period=120000
+garp=1
+
+# Dropped from the vendor config: pm_in_suspend, suspend_bcn_li_dtim,
+# wl_preinit=pm2_sleep_ret, and the Android wakeup pkt_filter set -- all
+# suspend-path settings; this system never suspends. No new pkt filters:
+# mDNS multicast must keep flowing.

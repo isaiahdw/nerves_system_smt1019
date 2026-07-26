@@ -1,0 +1,10 @@
+config BR2_PACKAGE_AP6281_FIRMWARE
+	bool "ap6281-firmware"
+	help
+	  WiFi firmware for the Broadcom/Synaptics AP6281S (BCM43013/SYN4381)
+	  SDIO module: firmware, nvram, CLM blobs, Bluetooth .hcd, and the
+	  bcmdhd config.txt. Extracted from the vendor's reference Debian
+	  image (byte-identical to the working system). The driver itself is
+	  the in-kernel bcmdhd (CONFIG_AP6XXX).
+
+# checksum nudge: phase-2 uboot env

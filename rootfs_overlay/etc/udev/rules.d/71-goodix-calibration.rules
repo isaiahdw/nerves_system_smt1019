@@ -1,0 +1,12 @@
+# Goodix GT9271 landscape touch calibration.
+#
+# This panel is portrait-native (800x1280) but the device is operated in
+# landscape, and the digitizer is mounted rotated 90 degrees relative to the
+# display. With a UI rendering landscape the raw touch is 90 degrees off; a
+# 90-degree-clockwise libinput calibration matrix corrects it. Verified
+# on-device: all four screen quadrants register under the finger.
+#
+# NOTE: this MUST be a separate rule line from the retag rule above. Combining
+# LIBINPUT_CALIBRATION_MATRIX with the ID_INPUT_* ENV assignments on one line
+# causes udev to silently drop the calibration property.
+SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="goodix-ts|Goodix Capacitive TouchScreen", ENV{LIBINPUT_CALIBRATION_MATRIX}="0 -1 1 1 0 0"

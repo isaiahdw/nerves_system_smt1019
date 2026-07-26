@@ -1,0 +1,11 @@
+#!/bin/sh
+# Load the WiFi driver for the Broadcom AP6281S (BCM43013) SDIO module
+# (SDIO ID 02D0:4381). dhd_static_buf preallocates buffers and must load
+# first (mirrors the vendor Debian's wifibt-init.sh). Run from erlinit via
+# --pre-run-exec.
+#
+# The *_msg_level=1 params keep only each subsystem's error bit: the
+# driver's Android-heritage defaults print ~150 chatty [dhd] lines per
+# boot/ifup at warn level.
+/sbin/modprobe dhd_static_buf 2>/dev/null || true
+exec /sbin/modprobe bcmdhd dhd_msg_level=1 android_msg_level=1 config_msg_level=1

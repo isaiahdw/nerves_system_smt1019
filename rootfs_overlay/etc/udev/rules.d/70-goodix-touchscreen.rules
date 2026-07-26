@@ -1,0 +1,11 @@
+# Goodix GT9271 touchscreen classification fix.
+#
+# The vendor gt9xx driver declares BTN_STYLUS/BTN_STYLUS2 capabilities, so
+# udev's input_id builtin tags the device ID_INPUT_TABLET. libinput then treats
+# it as a pen tablet and silently drops its ABS_MT touch events, so any UI
+# stack that enumerates input via libinput_udev never sees touch. Retag it as
+# a touchscreen so libinput delivers touch.
+#
+# Requires udevd to have run coldplug (udevadm trigger) before the UI
+# process starts.
+SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="goodix-ts|Goodix Capacitive TouchScreen", ENV{ID_INPUT_TABLET}="", ENV{ID_INPUT_TOUCHSCREEN}="1"

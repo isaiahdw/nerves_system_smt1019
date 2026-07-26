@@ -132,15 +132,20 @@ RK3576 boot ROM
   └─ idbloader.img          raw @ sector 64      (TPL/DDR init + SPL)
       └─ u-boot.itb         raw @ sector 16384   (U-Boot + BL31)
           └─ bootcmd = run nerves_init nerves_boot
-              └─ Image.<slot> + rk3576-smt1019.dtb from p1 (FAT)
+              └─ Image.<slot> + rk3576-smt1019.<slot>.dtb from p1 (FAT)
                   └─ squashfs rootfs on p2 (A) or p3 (B)
 ```
 
 U-Boot reads the Nerves environment block (slot selection, validation flag,
 firmware metadata) and boots the active slot directly; unvalidated firmware
-reverts automatically. An `extlinux/extlinux.conf` is kept on the FAT
-partition purely as a manual-recovery boot path. U-Boot build details and
-provenance: `uboot/README.md`.
+reverts automatically. The kernel **and** its device tree are per-slot
+(`Image.a` + `rk3576-smt1019.a.dtb`, etc.), so a reverted upgrade never
+runs the old kernel against a new dtb. One exception: the `resource`
+partition (boot splash + U-Boot's display dtb) is shared between slots — a
+revert keeps the new resource content, which affects only U-Boot-time
+display/splash, not the booted kernel. An `extlinux/extlinux.conf` is kept
+on the FAT partition purely as a manual-recovery boot path. U-Boot build
+details and provenance: `uboot/README.md`.
 
 ### Disk layout
 

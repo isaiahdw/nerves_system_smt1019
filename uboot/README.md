@@ -30,9 +30,10 @@ directly. Automatic revert follows the standard Nerves model:
   (sets `validated=1`), or the update reverts. See the app's
   `FirmwareValidator`.
 
-If `nerves_boot` ever fails, `bootcmd` falls back to
-`sysboot ... /extlinux/extlinux.conf` on the FAT partition, so a bad
-environment cannot brick the device.
+If the saved environment is ever missing or corrupt, U-Boot ignores it
+and its compiled-in default environment (distro boot) finds
+`extlinux/extlinux.conf` on the FAT partition, so a bad environment
+cannot brick the device.
 
 ## uboot.env — the shared firmware/boot environment
 
@@ -42,6 +43,18 @@ environment cannot brick the device.
 three parties: U-Boot reads it to pick the boot slot, `nerves_runtime`/
 `fwup` read and write the `nerves_fw_*` firmware metadata, and `boardid`
 reads the serial number.
+
+Two env variables are load-bearing beyond boot selection:
+`stdout`/`stderr` must include `vidconsole` or U-Boot never probes the
+display and the boot splash silently does not appear (the splash BMPs
+and their generator live in `uboot/logo/`; they are packed with the
+kernel dtb into the `resource` partition by `post-createfs.sh`). And
+because a saved environment replaces U-Boot's built-in defaults
+wholesale, removing any of the reproduced default variables in
+`uboot.env` silently loses that behavior. Note: editing `uboot.env`
+requires regenerating `uboot-env.bin` — Buildroot's host-uboot-tools
+does NOT rebuild it automatically (clear its build dir or do a clean
+system build).
 
 ## Rebuilding the blobs
 
@@ -91,3 +104,14 @@ manufacturer (ELC support):
 
 Useful `rkdeveloptool` commands: `ld` (list devices + mode), `db <loader>`
 (bootstrap maskrom), `wl <sector> <file>` (write LBA), `rd` (reboot).
+
+## Licensing of the committed blobs
+
+`u-boot.itb`/`u-boot-env.itb` contain U-Boot (GPL-2.0, source:
+Rockchip's vendor U-Boot tree in the SDK — rebuild instructions above)
+packed together with proprietary Rockchip/ARM components: the DDR-init
+and SPL blobs from rkbin (Rockchip's redistributable binary
+repository), ARM Trusted Firmware BL31, and OP-TEE BL32. `idbloader.img`
+and `rk3576_spl_loader_v1.09.108.bin` are packed from the same rkbin
+components. Rockchip distributes these blobs publicly for use with
+Rockchip SoCs; they are not covered by this repository's GPL licensing.

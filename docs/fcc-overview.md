@@ -60,6 +60,7 @@ RTU multi-drop integration; RS-232 covers legacy AV/security gear.
   u.FL.
 - **DEBUG pads** on the main-board back (top edge, next to the `BAT`
   connector): the serial/FIQ-debugger console (ttyFIQ0, 1.5 Mbaud). The
-  small button near the eMMC on the same side is the **maskrom button** —
-  see [uboot/README.md](../uboot/README.md) for the recovery-mode
-  procedure and an annotated photo.
+  **unpopulated button footprint** near the eMMC on the same side is the
+  maskrom entry point (no button fitted — short the two pads) — see
+  [uboot/README.md](../uboot/README.md) for the recovery-mode procedure
+  and an annotated photo.

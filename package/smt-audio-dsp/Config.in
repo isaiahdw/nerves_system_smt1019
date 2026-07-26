@@ -3,12 +3,14 @@ config BR2_PACKAGE_SMT_AUDIO_DSP
 	select BR2_PACKAGE_ALSA_PLUGINS
 	help
 	  Custom LADSPA plugin (smt_hpf_limiter) for the SMT1019's 2 W
-	  built-in speaker: a 4th-order Butterworth high-pass followed by
-	  a makeup-gain tanh soft-limiter.
+	  built-in speakers: a 4th-order Butterworth high-pass, a 3-band
+	  voicing EQ (warmth/presence/air), and a makeup-gain tanh
+	  soft-limiter.
 
-	  The high-pass removes the sub-~200 Hz content the small woofer
-	  over-excurses on; the makeup gain + soft limiter raise music RMS
-	  toward the digital ceiling for loudness without hard clipping.
+	  The high-pass removes the low-frequency content the small drivers
+	  over-excurse on, the EQ voices the boxy 40 mm drivers, and the
+	  makeup gain + soft limiter raise music RMS toward the digital
+	  ceiling for loudness without hard clipping.
 
 	  Installs /usr/lib/ladspa/smt_audio_dsp.so, loaded by the ALSA
 	  `type ladspa` PCM plugin (alsa-plugins) via /etc/asound.conf so

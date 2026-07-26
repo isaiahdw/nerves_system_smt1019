@@ -7,4 +7,3 @@ config BR2_PACKAGE_AP6281_FIRMWARE
 	  image (byte-identical to the working system). The driver itself is
 	  the in-kernel bcmdhd (CONFIG_AP6XXX).
 
-# checksum nudge: phase-2 uboot env

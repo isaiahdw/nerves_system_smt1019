@@ -94,8 +94,9 @@ BR2_PACKAGE_ALSA_UTILS_AMIXER=y
 BR2_PACKAGE_ALSA_UTILS_ALSACTL=y
 BR2_PACKAGE_ALSA_UTILS_SPEAKER_TEST=y
 # alsa-plugins provides the `type ladspa` PCM host; smt-audio-dsp is our custom
-# LADSPA high-pass + soft-limiter plugin for the 2 W speaker (selects
-# alsa-plugins). Chained in /etc/asound.conf so all playback is filtered.
+# LADSPA high-pass + 3-band voicing EQ + soft-limiter plugin for the 2 W
+# speakers (selects alsa-plugins). Chained in /etc/asound.conf so all
+# playback is filtered.
 # libsamplerate gives alsa-plugins a real rate converter: without it, 44.1k
 # MP3s hit alsa-lib's built-in linear interpolator on the way to the fixed
 # 48k dmix and sound metallic/aliased.

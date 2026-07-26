@@ -9,8 +9,23 @@ Hardware support at release:
 - Boot: Rockchip vendor boot chain (idbloader + U-Boot/BL31), Nerves
   U-Boot-environment A/B slots with automatic revert, delta firmware
   updates (fwup >= 1.12.0 on device), extlinux manual-recovery path.
+  Kernel and device tree are both per-slot (`Image.<slot>` +
+  `rk3576-smt1019.<slot>.dtb`) so a reverted upgrade never mixes
+  versions. The maskrom download loader is committed
+  (`uboot/rk3576_spl_loader_v1.09.108.bin`) with the recovery
+  procedure documented.
+- Boot splash: vendor U-Boot logo path via the Rockchip `resource`
+  partition (resource.img = kernel dtb + splash BMPs; `stdout=
+  serial,vidconsole` in the env is load-bearing for the display probe);
+  the kernel holds the splash until a DRM client takes over. Artwork
+  generator in `uboot/logo/gen_splash.py`.
 - Kernel: armbian/linux-rockchip `rk-6.1-rkr5.1` pinned by commit SHA,
-  board delta carried as the `linux/*.patch` stack (see README).
+  board delta carried as the `linux/*.patch` stack (see README),
+  including boot-log cleanups (Mali IRQ names, quiet fiq-debugger
+  probe, drm no-splash warn demotion). WL_ROCKCHIP/cfg80211/mac80211
+  build as modules so regulatory.db loads from the rootfs.
+- NPU: RKNPU driver validated with librknnrt 2.3.2 (3 TOPS INT8 rated
+  on the RK3576S; runtime userspace not shipped — see README).
 - Display + touch: 800×1280 MIPI-DSI panel on VOP2/DSI2, mainline Goodix
   GT9271 touch (udev retag + rotation calibration for libinput consumers),
   Mali G52 via vendor kmod + libmali (EGL/GLES/GBM), kmscube smoke test.

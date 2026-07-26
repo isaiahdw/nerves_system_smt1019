@@ -24,6 +24,9 @@ Working:
 - Sensors: GXHT30 temp/humidity, STK3311 ALS/proximity, KXTJ3
   accelerometer (userspace via Circuits.I2C)
 - HYM8563 RTC
+- Boot splash: vendor U-Boot draws `logo.bmp` from the resource
+  partition at ~2 s and the kernel holds it until a DRM client takes
+  over (artwork + generator in `uboot/logo/`)
 - NPU: validated end to end with librknnrt (2.3.2, matmul API; 558 GOPS
   dense int8 measured). The RK3576S is rated 3 TOPS INT8
   (sparsity-assisted, per its [datasheet](docs/datasheets/rk3576s-soc.pdf))
@@ -113,15 +116,18 @@ unlike a linear image write — vendor storage is untouched):
 scp <firmware>.fw nerves-XXXX.local:/root/
 ssh nerves-XXXX.local  # then in IEx:
 #   cmd("fwup -a -d /dev/mmcblk0 -t complete -i /root/<firmware>.fw")
-#   cmd("reboot -f")
+#   File.write!("/proc/sysrq-trigger", "b")
 ```
 
-Reboot with `reboot -f` (or a power cycle) — the complete task rewrites
-the disk under the running system, so a graceful
-`Nerves.Runtime.reboot/0` hangs trying to page in shutdown code from
-the replaced rootfs (the watchdog then resets the board after ~45 s
-anyway; the flash itself is already complete and safe). Expect the
-application partition to be freshly re-initialized.
+Reboot with the SysRq trigger (or a power cycle) — the complete task
+rewrites the disk under the running system, after which nothing that
+needs a disk read works: a graceful `Nerves.Runtime.reboot/0` hangs
+paging in shutdown code, and even spawning `reboot -f` fails with I/O
+errors because the binary can no longer be loaded. Writing `b` to
+`/proc/sysrq-trigger` reboots from inside the already-running kernel
+with no disk access. The flash itself is complete and safe the moment
+fwup prints Success. Expect the application partition to be freshly
+re-initialized.
 
 **OTA upgrades** use the standard Nerves flow (`mix upload`, or `fwup` over
 SSH). Upgrades write only the inactive slot; the new firmware boots
@@ -133,7 +139,7 @@ the application validates it (`Nerves.Runtime.validate_firmware/0`).
 ```
 RK3576 boot ROM
   └─ idbloader.img          raw @ sector 64      (TPL/DDR init + SPL)
-      └─ u-boot.itb         raw @ sector 16384   (U-Boot + BL31)
+      └─ u-boot-env.itb     raw @ sector 16384   (U-Boot + BL31)
           └─ bootcmd = run nerves_init nerves_boot
               └─ Image.<slot> + rk3576-smt1019.<slot>.dtb from p1 (FAT)
                   └─ squashfs rootfs on p2 (A) or p3 (B)
@@ -157,9 +163,9 @@ details and provenance: `uboot/README.md`.
 | GPT               | 0                      | 32 KB   |                                   |
 | idbloader.img     | 64                     | < 4 MB  | TPL + SPL                         |
 | (vendor env)      | ~8192 (4 MB)           | 32 KB   | Vendor U-Boot `saveenv` area      |
-| u-boot.itb        | 16384 (8 MB)           | < 7 MB  | U-Boot + BL31                     |
+| u-boot-env.itb    | 16384 (8 MB)           | < 7 MB  | U-Boot + BL31                     |
 | Nerves U-Boot env | 30720 (15 MB)          | 128 KB  | Firmware metadata (fw_env.config) |
-| p1 `boot` (FAT32) | 32768 (16 MB)          | 256 MB  | Image.a/b, dtb, extlinux          |
+| p1 `bootfs` (FAT32) | 32768 (16 MB)        | 256 MB  | Image.a/b, per-slot dtbs, extlinux |
 | p2 `rootfs_a`     |                        | 512 MB  | squashfs                          |
 | p3 `rootfs_b`     |                        | 512 MB  | squashfs                          |
 | p4 `resource`     |                        | 16 MB   | resource.img: dtb + boot-splash BMPs for the vendor U-Boot |
@@ -183,7 +189,7 @@ The board support is carried as `linux/*.patch`:
 | `0003` | Cap the SDIO bus at 50 MHz |
 | `0004` | Enable the watchdog |
 | `0005` | RGB light ring on PWM LEDs (`leds-pwm`) |
-| `0006` | Board-dts cleanup: correct `wifi_chip_type`, remove the unused camera pipeline and boot-splash memory handover, set panel `bpc` |
+| `0006` | Board-dts cleanup: correct `wifi_chip_type`, drop the camera dtsi (keeping i2c4 for the ALS), keep the drm-logo splash handover, set panel `bpc` |
 | `0007` | eth0 MAC from Rockchip vendor storage, generated and persisted on first boot |
 | `0008` | Disable the EVB IR-remote decoder |
 | `0009` | Un-alias bcmdhd's MSG log bits from its ERROR bits so `*_msg_level=1` gives errors-only logging |

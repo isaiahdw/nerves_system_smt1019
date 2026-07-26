@@ -94,7 +94,7 @@ defmodule NervesSystemSmt1019.MixProject do
   defp package do
     [
       files: package_files(),
-      licenses: ["GPL-2.0-only", "GPL-2.0-or-later"],
+      licenses: ["GPL-2.0-only", "GPL-2.0-or-later", "CC0-1.0"],
       links: %{
         "GitHub" => @source_url
       }
@@ -117,7 +117,6 @@ defmodule NervesSystemSmt1019.MixProject do
       "fwup-ops.conf",
       "fwup.conf",
       "LICENSES/*",
-      "linux",
       "mix.exs",
       "nerves_defconfig",
       "post-build.sh",

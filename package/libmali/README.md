@@ -39,11 +39,12 @@ apply to any EGL/GBM UI stack:
    linear scanout buffers (e.g. GBM `LINEAR` modifier, or the libmali
    AFBC-disable env var).
 
-2. **Release the framebuffer console.** fbcon owns the panel (IEx renders
-   there via `tty1`). Unbind it before a KMS app takes over:
-   `for f in /sys/class/vtconsole/vtcon*/bind; do echo 0 > $f; done`.
-   For the product, move the console off the panel (SSH/usb0 are available)
-   or have the UI app unbind fbcon on launch.
+2. **No framebuffer console to fight.** This kernel config disables
+   fbdev/fbcon entirely (`linux/nerves.config`), so nothing contends for
+   the panel: it shows the U-Boot boot splash until the first DRM client
+   (kmscube or the application UI) takes over. If you re-enable fbcon in
+   a derivative config, unbind it before a KMS app starts
+   (`echo 0 > /sys/class/vtconsole/vtcon*/bind`).
 
 Confirmed working: `kmscube -m 0` renders a spinning cube on the panel;
 `renderer = Mali-G52`, GLES 3.2, over DRM/KMS EGL.

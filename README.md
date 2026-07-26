@@ -113,12 +113,15 @@ unlike a linear image write — vendor storage is untouched):
 scp <firmware>.fw nerves-XXXX.local:/root/
 ssh nerves-XXXX.local  # then in IEx:
 #   cmd("fwup -a -d /dev/mmcblk0 -t complete -i /root/<firmware>.fw")
-#   Nerves.Runtime.reboot()
+#   cmd("reboot -f")
 ```
 
-Reboot immediately afterwards — the complete task rewrites the disk
-under the running system — and expect the application partition to be
-freshly re-initialized.
+Reboot with `reboot -f` (or a power cycle) — the complete task rewrites
+the disk under the running system, so a graceful
+`Nerves.Runtime.reboot/0` hangs trying to page in shutdown code from
+the replaced rootfs (the watchdog then resets the board after ~45 s
+anyway; the flash itself is already complete and safe). Expect the
+application partition to be freshly re-initialized.
 
 **OTA upgrades** use the standard Nerves flow (`mix upload`, or `fwup` over
 SSH). Upgrades write only the inactive slot; the new firmware boots

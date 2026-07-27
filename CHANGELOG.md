@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.2.0
+
+- Camera support, validated on hardware: GC5035 (5 MP MIPI-CSI) via the
+  rkcif/rkisp pipeline (kernel patches `0017`/`0018`,
+  `CONFIG_VIDEO_GC5035`, CMA raised to 64 MB for the ISP's temporal-NR
+  buffers), the rkaiq 3A engine as a prebuilt package with tuned GC5035
+  IQ (`package/rkaiq` — build recipe and quick-test steps in its
+  README), the `camsnap` live-view/calibration daemon, and libv4l +
+  v4l-utils for pipeline debugging. An application must supervise
+  `rkaiq_3A_server` for usable imaging.
+
 ## v0.1.0
 
 Initial public release, derived from the internal SMT1019 bring-up system.
@@ -36,9 +47,6 @@ Hardware support at release:
 - Ethernet: RTL8111H with stable vendor-storage MAC; PoE powered.
 - Audio: ES8323-family codec playback with a LADSPA voicing/protection
   chain for the 2 W speakers, ES7202/PDM 4-mic capture.
-- Camera: GC5035 (5 MP MIPI-CSI) via rkcif/rkisp with the rkaiq 3A
-  engine (prebuilt, tuned GC5035 IQ) and the camsnap live-view daemon;
-  CMA raised to 64 MB for the ISP's temporal-NR buffers.
 - RGB light ring on mainline leds-pwm; GXHT30, STK3311, KXTJ3, HYM8563
   sensors/RTC; watchdog-backed heart; USB gadget networking; both USB
   hosts enabled.

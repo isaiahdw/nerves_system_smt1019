@@ -69,7 +69,11 @@ Add the system to your app's `mix.exs` as an `:smt1019` target:
 @all_targets [:smt1019]
 
 # in deps():
-{:nerves_system_smt1019, "~> 0.1", runtime: false, targets: :smt1019}
+{:nerves_system_smt1019,
+ github: "isaiahdw/nerves_system_smt1019",
+ tag: "v0.2.0",
+ runtime: false,
+ targets: :smt1019}
 ```
 
 Then set `MIX_TARGET=smt1019` for every mix command:

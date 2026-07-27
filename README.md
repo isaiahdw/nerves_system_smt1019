@@ -15,7 +15,9 @@ Working:
   `kmscube` verifies the graphics path.
 - Touch: Goodix GT9271 (mainline driver, udev retag + rotation
   calibration for libinput consumers)
-- WiFi: AP6281S (WiFi 6E)
+- WiFi: both factory radio sourcings — AP6281S (WiFi 6E) and the
+  AIC8800D80 variant; the boot script reads the SDIO IDs and loads the
+  matching driver (see the WiFi section)
 - Ethernet: gigabit, stable MAC from vendor storage
 - Power: PoE, powers the device standalone (no DC input)
 - Audio out: stereo speakers through a LADSPA voicing/protection chain
@@ -31,7 +33,10 @@ Working:
   with the rkaiq 3A engine (prebuilt, tuned GC5035 IQ in
   `/etc/iqfiles`) and the `camsnap` live-view/calibration daemon. An
   application must run `rkaiq_3A_server` for usable imaging — quick-test
-  steps and details in `package/rkaiq/README.md`
+  steps and details in `package/rkaiq/README.md`. Some units ship
+  without the camera: the pipeline is loaded at boot only if the sensor
+  probes (`/usr/bin/load-camera-modules`), so camera-less units have no
+  `/dev/video*` nodes at all
 - NPU: validated end to end with librknnrt (2.3.2, matmul API; 558 GOPS
   dense int8 measured). The RK3576S is rated 3 TOPS INT8
   (sparsity-assisted, per its [datasheet](docs/datasheets/rk3576s-soc.pdf))
@@ -47,13 +52,8 @@ Not working / not enabled:
 - Bluetooth: bring-up pending (UART HCI; `BCM4381A1.hcd` extracted)
 - NFC (NXP PN5xx family, i2c7@0x28): does not ACK on the bus (likely
   needs VEN power-up); needs the NXP userspace stack
-- AIC8800 radio variant: the manufacturer ships mixed radio sourcing,
-  and units fitted with the AIC8800 module instead of the AP6281S have
-  no WiFi/BT with this system (bcmdhd fails power-up cleanly; verified
-  on hardware — everything else works). Telltale: no `wlan0`, and
-  bcmdhd logs "failed to power up DHD generic adapter"
-- Thread/802.15.4: the radio module is border-router capable but shares
-  its single UART with Bluetooth; not brought up
+- Thread/802.15.4: the AP6281S is border-router capable but shares its
+  single UART with Bluetooth; not brought up
 
 ## Building
 
@@ -222,18 +222,23 @@ migration would drop most of the vendor code this system carries.
 
 ### WiFi
 
-The radio is a Broadcom/AMPAK **AP6281S** (Synaptics SYN4381, SDIO
-`02D0:4381`), driven by the in-tree `bcmdhd` (`CONFIG_AP6XXX=m`), loaded by
-`rootfs_overlay/usr/bin/load-wifi-modules` with errors-only log levels.
-Firmware, NVRAM, CLM, and the driver's runtime tuning file
-(`config_syn4381a0.txt`) ship in `package/ap6281-firmware` and install to
-both `/lib/firmware` and `/vendor/etc/firmware` (the path compiled into
-bcmdhd).
+The manufacturer ships two radio sourcings, and both are supported
+(verified on hardware). `rootfs_overlay/usr/bin/load-wifi-modules` reads
+the SDIO IDs at boot — the card enumerates without a driver — and loads
+the matching stack:
 
-Note the manufacturer ships mixed radio variants: units fitted with the
-AIC8800 module instead of the AP6281S are not supported by this WiFi
-stack (verified on hardware — the rest of the system works; see the
-hardware-status list).
+- **AP6281S** (Broadcom/Synaptics SYN4381, SDIO `02D0:4381`): the
+  in-tree `bcmdhd` (`CONFIG_AP6XXX=m`) with errors-only log levels.
+  Firmware, NVRAM, CLM, and the driver's runtime tuning file
+  (`config_syn4381a0.txt`) ship in `package/ap6281-firmware` and install
+  to both `/lib/firmware` and `/vendor/etc/firmware` (the path compiled
+  into bcmdhd).
+- **AIC8800D80** (AICSemi, SDIO `c8a1:0082`): `aic8800_bsp` +
+  `aic8800_fdrv` built from the SDK driver source in `package/aic8800`,
+  which also carries the firmware — see that package's README.
+
+Unknown or not-yet-visible cards fall through to bcmdhd, which performs
+its own power-on card detection.
 
 The tuning file targets a stationary, mains-powered device: roaming off
 (`roam_off=1`), powersave off (`PM=0`), a 120 s firmware keepalive, and
@@ -270,12 +275,12 @@ Rockchip RK806 PMIC on i2c1@0x23
 | Proximity + ALS | Sensortek STK3311-X (i2c4@0x48) — [datasheet](docs/datasheets/stk3311-als-proximity.pdf) | Userspace via Circuits.I2C (DT node `ls_stk3x1x`; no kernel driver bound) |
 | RGB light ring | R/G/B on pwm2 ch6/ch2/ch5, enable GPIO4_C7 | Mainline `leds-pwm` → `/sys/class/leds/{red,green,blue}` |
 | Audio | ES8388/ES8323-family codec (i2c3@0x10) — [datasheet](docs/datasheets/es8388-audio-codec.pdf), [user guide](docs/datasheets/es8388-user-guide.pdf) + ES7202 PDM mic ADC (i2c3@0x32) — [brief](docs/datasheets/es7202-pdm-adc.pdf) | ALSA; LADSPA voicing/protection chain (`package/smt-audio-dsp`) |
-| WiFi/BT/Thread | AMPAK AP6281S (Synaptics SYN4381, SDIO 02d0:4381 + UART ttyS4) — [module datasheet](docs/datasheets/ap6281s-wifi-bt-module.pdf), [SoC brief](docs/datasheets/syn4381-triple-combo-brief.pdf) | WiFi 6E working; BT and 802.15.4/Thread share the single module UART |
+| WiFi/BT/Thread | Mixed sourcing: AMPAK AP6281S (Synaptics SYN4381, SDIO 02d0:4381 + UART ttyS4) — [module datasheet](docs/datasheets/ap6281s-wifi-bt-module.pdf), [SoC brief](docs/datasheets/syn4381-triple-combo-brief.pdf) — or AICSemi AIC8800D80 (SDIO c8a1:0082) | WiFi working on both radios (driver auto-selected at boot — see WiFi section); BT pending on both (AP6281S also does 802.15.4/Thread, sharing the single module UART with BT) |
 | Ethernet | Realtek RTL8111H (PCIe 10ec:8168 rev 0x15) | Gigabit; MAC from vendor storage |
 | Power | PoE over the ethernet port | Powers the device standalone (no DC input) |
 | RTC | Haoyu HYM8563 (i2c2@0x51) — [datasheet](docs/datasheets/hym8563-rtc.pdf) | Sets system clock at boot |
 | Accelerometer | Kionix KXTJ3 (i2c7@0x0e) — [datasheet](docs/datasheets/kxtj3-accelerometer.pdf) | Userspace via Circuits.I2C; the DT's second footprint (BMA2xx @0x18) is unpopulated |
 | NPU | RKNPU (driver 0.9.8, DRM render node `/dev/dri/renderD129`) | Works with librknnrt 2.3.2; 3 TOPS INT8 rated (500 MHz S bin), 558 GOPS measured dense int8 matmul |
 | NFC | NXP PN5xx family (i2c7@0x28) | Not working — see hardware status |
-| Camera | GC5035 (MIPI-CSI, 5 MP) | Working: rkcif/rkisp + rkaiq 3A (`package/rkaiq`), `camsnap` live view |
+| Camera | GC5035 (MIPI-CSI, 5 MP); not fitted on some units | Working: rkcif/rkisp + rkaiq 3A (`package/rkaiq`), `camsnap` live view; pipeline loads only when the sensor probes |
 | io_control | 4 general-purpose GPIOs | Circuits.GPIO |

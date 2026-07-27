@@ -47,6 +47,11 @@ Not working / not enabled:
 - Bluetooth: bring-up pending (UART HCI; `BCM4381A1.hcd` extracted)
 - NFC (NXP PN5xx family, i2c7@0x28): does not ACK on the bus (likely
   needs VEN power-up); needs the NXP userspace stack
+- AIC8800 radio variant: the manufacturer ships mixed radio sourcing,
+  and units fitted with the AIC8800 module instead of the AP6281S have
+  no WiFi/BT with this system (bcmdhd fails power-up cleanly; verified
+  on hardware — everything else works). Telltale: no `wlan0`, and
+  bcmdhd logs "failed to power up DHD generic adapter"
 - Thread/802.15.4: the radio module is border-router capable but shares
   its single UART with Bluetooth; not brought up
 
@@ -224,6 +229,11 @@ Firmware, NVRAM, CLM, and the driver's runtime tuning file
 (`config_syn4381a0.txt`) ship in `package/ap6281-firmware` and install to
 both `/lib/firmware` and `/vendor/etc/firmware` (the path compiled into
 bcmdhd).
+
+Note the manufacturer ships mixed radio variants: units fitted with the
+AIC8800 module instead of the AP6281S are not supported by this WiFi
+stack (verified on hardware — the rest of the system works; see the
+hardware-status list).
 
 The tuning file targets a stationary, mains-powered device: roaming off
 (`roam_off=1`), powersave off (`PM=0`), a 120 s firmware keepalive, and

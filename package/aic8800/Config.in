@@ -1,0 +1,11 @@
+config BR2_PACKAGE_AIC8800
+	bool "aic8800"
+	depends on BR2_LINUX_KERNEL
+	help
+	  AICSemi AIC8800 SDIO WiFi driver (aic8800_bsp + aic8800_fdrv
+	  kernel modules, built from the Rockchip SDK's
+	  external/rkwifibt sources) and firmware. Used by SMT1019
+	  units fitted with the AIC8800D80 radio (SDIO c8a1:0082)
+	  instead of the AP6281S.
+
+	  The Bluetooth module (aic8800_btlpm) is not built.

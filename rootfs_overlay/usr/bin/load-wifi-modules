@@ -1,11 +1,27 @@
 #!/bin/sh
-# Load the WiFi driver for the Broadcom AP6281S (BCM43013) SDIO module
-# (SDIO ID 02D0:4381). dhd_static_buf preallocates buffers and must load
-# first (mirrors the vendor Debian's wifibt-init.sh). Run from erlinit via
+# Load the WiFi driver matching the fitted radio. The manufacturer ships
+# two sourcing variants of the SDIO module and the card enumerates at
+# kernel boot without a driver, so the IDs are readable here:
+#
+#   AMPAK AP6281S (Broadcom SYN4381)  02d0:4381  -> bcmdhd (in-kernel)
+#   AICSemi AIC8800D80                c8a1:0082  -> aic8800_bsp + aic8800_fdrv
+#
+# Anything else (including no card visible) falls through to bcmdhd,
+# which performs its own power-on card detection. Run from erlinit via
 # --pre-run-exec.
 #
-# The *_msg_level=1 params keep only each subsystem's error bit: the
-# driver's Android-heritage defaults print ~150 chatty [dhd] lines per
-# boot/ifup at warn level.
-/sbin/modprobe dhd_static_buf 2>/dev/null || true
-exec /sbin/modprobe bcmdhd dhd_msg_level=1 android_msg_level=1 config_msg_level=1
+# bcmdhd: dhd_static_buf preallocates buffers and must load first
+# (mirrors the vendor Debian's wifibt-init.sh). The *_msg_level=1 params
+# keep only each subsystem's error bit: the driver's Android-heritage
+# defaults print ~150 chatty [dhd] lines per boot/ifup at warn level.
+
+case "$(cat /sys/bus/sdio/devices/*/vendor 2>/dev/null)" in
+*0xc8a1*)
+    /sbin/modprobe aic8800_bsp
+    exec /sbin/modprobe aic8800_fdrv
+    ;;
+*)
+    /sbin/modprobe dhd_static_buf 2>/dev/null || true
+    exec /sbin/modprobe bcmdhd dhd_msg_level=1 android_msg_level=1 config_msg_level=1
+    ;;
+esac

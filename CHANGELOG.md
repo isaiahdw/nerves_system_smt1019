@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.3.0
+
+- WiFi works on both factory radio sourcings, validated on hardware:
+  the AIC8800D80 variant (SDIO `c8a1:0082`) is now supported by
+  `package/aic8800` (driver built from the SDK source against the
+  system kernel, plus firmware), and `load-wifi-modules` selects the
+  stack at boot from the SDIO IDs (`02d0` → bcmdhd, `c8a1` → aic8800,
+  unknown/none → bcmdhd).
+- Camera pipeline loads only when the GC5035 sensor is fitted,
+  validated on hardware both ways: the camera stack is built as
+  modules, `load-camera-modules` probes the sensor and loads the
+  rkcif/rkisp pipeline only on a successful bind (a modprobe.d
+  blacklist keeps udev coldplug from auto-loading the modules).
+  Camera-less units expose no `/dev/video*`/`/dev/media*` nodes;
+  camera-fitted units are unchanged, including rkaiq 3A + camsnap.
+
 ## v0.2.0
 
 - Camera support, validated on hardware: GC5035 (5 MP MIPI-CSI) via the

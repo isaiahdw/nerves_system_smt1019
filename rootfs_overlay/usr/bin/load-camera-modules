@@ -1,0 +1,23 @@
+#!/bin/sh
+# Bring up the camera pipeline only when a sensor is actually fitted:
+# probe the GC5035 sensor driver first, and load the rkcif/rkisp pipeline
+# modules only if a sensor bound. Some units ship without the camera; the
+# vendor rkcif/rkisp drivers register their ~25 video/media device nodes
+# even with no sensor present (and rkisp oopses in v4l2-async cleanup if
+# unbound in that state), so on camera-less units the pipeline is simply
+# never loaded. Run from erlinit via --pre-run-exec.
+#
+# The sensor probe is synchronous during modprobe: it powers the sensor
+# and reads the chip ID, so bind state is authoritative immediately.
+/sbin/modprobe gc5035 2>/dev/null || true
+
+if [ -n "$(ls /sys/bus/i2c/drivers/gc5035 2>/dev/null | grep -- -00)" ]; then
+    /sbin/modprobe phy-rockchip-csi2-dphy-hw
+    /sbin/modprobe phy-rockchip-csi2-dphy
+    /sbin/modprobe video_rkcif
+    exec /sbin/modprobe video_rkisp
+else
+    # No sensor: unload the sensor driver again and leave the pipeline off
+    /sbin/modprobe -r gc5035 2>/dev/null || true
+fi
+exit 0

@@ -44,15 +44,17 @@ three parties: U-Boot reads it to pick the boot slot, `nerves_runtime`/
 `fwup` read and write the `nerves_fw_*` firmware metadata, and `boardid`
 reads the serial number.
 
-The vendor U-Boot injects runtime variables into the RAM environment at
-every boot (`devtype`, `rkimg_bootdev`, and notably the bootcount-scheme
-pair `upgrade_available`/`bootcount`), and any `saveenv` persists them.
-`nerves_init` deletes the bootcount pair before its saveenvs: a persisted
-`upgrade_available=0` makes `nerves_runtime` treat every upgraded boot as
-already validated (it consults the standard U-Boot bootcount scheme
-before `nerves_fw_validated`), silently disarming the automatic
-validation and leaving the device one unattended reboot away from a
-revert.
+The U-Boot bootcount-scheme pair `upgrade_available`/`bootcount` must
+never persist in the saved environment: `nerves_runtime` consults that
+scheme before `nerves_fw_validated`, so a persisted
+`upgrade_available=0` makes every upgraded boot read as already
+validated — silently disarming the startup guard's auto-validation and
+leaving the device one unattended reboot from a revert. An earlier
+version of the ops.fw `validate` task wrote the pair, and the vendor
+U-Boot additionally persists assorted runtime variables (`devtype`,
+`rkimg_bootdev`, ...) through any `saveenv`. Defenses here:
+`nerves_init` deletes the pair before its saveenvs, and the `validate`
+task unsets rather than writes them.
 
 Two env variables are load-bearing beyond boot selection:
 `stdout`/`stderr` must include `vidconsole` or U-Boot never probes the

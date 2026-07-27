@@ -7,6 +7,34 @@ recipe below) install to /usr/bin + /usr/lib, IQ files to /etc/iqfiles
 (the server's built-in path). An application must supervise rkaiq_3A_server — the camera is
 unusable for imaging without it.
 
+## Quick test (validated on hardware)
+
+From IEx on the device (both daemons are normally supervised by the
+application; starting them by hand is fine for a smoke test):
+
+```elixir
+cmd("v4l2-ctl --list-devices")            # rkcif/rkisp video devices enumerate
+cmd("rkaiq_3A_server >/dev/null 2>&1 &")  # 3A engine — required for usable images
+cmd("camsnap >/dev/null 2>&1 &")          # live-view daemon (package/camsnap)
+Process.sleep(3000)
+ls("/dev/shm")                            # expect cam.jpg + cam_stats.json
+```
+
+Then from the host:
+
+```sh
+scp nerves-XXXX.local:/dev/shm/cam.jpg . && open cam.jpg
+```
+
+A properly exposed, correctly white-balanced photo is the pass condition.
+`cam.jpg` refreshes at ~10 fps; `cam_stats.json` carries center-patch
+mean Y/U/V + linear-ish RGB (the white-balance calibration instrument).
+
+Troubleshooting: `RingLogger.grep(~r/gc5035|rkisp|camsnap/)` for sensor
+probe and pipeline errors; run `cmd("camsnap")` in the foreground to see
+its own diagnostics. Note the image's trimmed busybox lacks `head` —
+keep shell pipelines minimal.
+
 ## Build recipe (validated 2026-07-25, cross-compiled on the Mac)
 
 Source: SDK tarball `external/camera_engine_rkaiq` (597 MB, extracted at

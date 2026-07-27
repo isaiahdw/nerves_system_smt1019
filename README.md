@@ -30,8 +30,8 @@ Working:
 - Camera: GC5035 (5 MP, MIPI-CSI) through the rkcif/rkisp pipeline,
   with the rkaiq 3A engine (prebuilt, tuned GC5035 IQ in
   `/etc/iqfiles`) and the `camsnap` live-view/calibration daemon. An
-  application must run `rkaiq_3A_server` for usable imaging — see
-  `package/rkaiq/README.md`
+  application must run `rkaiq_3A_server` for usable imaging — quick-test
+  steps and details in `package/rkaiq/README.md`
 - NPU: validated end to end with librknnrt (2.3.2, matmul API; 558 GOPS
   dense int8 measured). The RK3576S is rated 3 TOPS INT8
   (sparsity-assisted, per its [datasheet](docs/datasheets/rk3576s-soc.pdf))

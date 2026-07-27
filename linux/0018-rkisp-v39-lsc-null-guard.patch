@@ -1,0 +1,26 @@
+rkisp: guard the v39 LSC config against missing LUT buffers.
+
+Reproduced on the SMT1019: if the ISP params stream restarts while the
+rkaiq 3A engine is mid-reinitialization (kernel logs "waiting on params
+stream off event timeout"), the next STREAMON runs
+rkisp_params_first_cfg_v39 -> isp_lsc_config -> isp_lsc_matrix_cfg_ddr
+with buf_lsclut[].vaddr == NULL and Oopses on the table write. Skip the
+config cycle instead; a healthy params cycle reconfigures LSC.
+
+--- a/drivers/media/platform/rockchip/isp/isp_params_v39.c	2026-07-26 10:26:18
++++ b/drivers/media/platform/rockchip/isp/isp_params_v39.c	2026-07-26 10:26:18
+@@ -521,6 +521,14 @@
+ 	memset(&index[0], 0, sizeof(index));
+ 	buf_idx = (priv_val->buf_lsclut_idx++) % ISP39_LSC_LUT_BUF_NUM;
+ 	buf_vaddr = priv_val->buf_lsclut[buf_idx].vaddr;
++	/* The LUT buffers can be gone when params restart while the 3A engine
++	 * is mid-reinit (observed: NULL deref Oops here on STREAMON after
++	 * "waiting on params stream off event timeout"). Skip this cycle —
++	 * the next healthy params cycle reconfigures LSC. */
++	if (!buf_vaddr) {
++		WARN_ONCE(1, "rkisp: lsc lut buffer not allocated, skip lsc config\n");
++		return;
++	}
+ 
+ 	vaddr[0] = buf_vaddr;
+ 	vaddr[1] = buf_vaddr + ISP39_LSC_LUT_TBL_SIZE;

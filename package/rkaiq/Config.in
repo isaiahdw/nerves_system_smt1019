@@ -1,0 +1,6 @@
+config BR2_PACKAGE_RKAIQ
+	bool "rkaiq"
+	help
+	  Rockchip camera 3A engine (rkaiq_3A_server + librkaiq) with the
+	  GC5035 IQ tuning files in /etc/iqfiles. Prebuilt binaries; see
+	  README.md in this package for the build recipe and ABI patch.

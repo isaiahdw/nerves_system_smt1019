@@ -36,6 +36,9 @@ Hardware support at release:
 - Ethernet: RTL8111H with stable vendor-storage MAC; PoE powered.
 - Audio: ES8323-family codec playback with a LADSPA voicing/protection
   chain for the 2 W speakers, ES7202/PDM 4-mic capture.
+- Camera: GC5035 (5 MP MIPI-CSI) via rkcif/rkisp with the rkaiq 3A
+  engine (prebuilt, tuned GC5035 IQ) and the camsnap live-view daemon;
+  CMA raised to 64 MB for the ISP's temporal-NR buffers.
 - RGB light ring on mainline leds-pwm; GXHT30, STK3311, KXTJ3, HYM8563
   sensors/RTC; watchdog-backed heart; USB gadget networking; both USB
   hosts enabled.

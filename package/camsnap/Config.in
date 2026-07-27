@@ -1,0 +1,6 @@
+config BR2_PACKAGE_CAMSNAP
+	bool "camsnap"
+	select BR2_PACKAGE_JPEG
+	help
+	  Camera live-view + calibration daemon for the SMT1019 (rkisp
+	  mainpath -> /dev/shm/cam.jpg + cam_stats.json).

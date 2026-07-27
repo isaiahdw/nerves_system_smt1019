@@ -1,0 +1,20 @@
+rkaiq: match the isp39 stats UAPI to the armbian rk-6.1-rkr5.1 kernel.
+
+The 20251118 SDK's rk-isp39-config.h grew `int buf_bay3d_iir_index` at
+the END of struct isp39_stat. Our kernel's rkisp predates it, so with
+the field present frame_id/params_id in rkisp39_stat_buffer shift by 4
+bytes and the engine reads frame id 0 forever -> AE/AWB never iterate
+("can't find the latest effecting ispparams for id 0"). No engine code
+references the field. Apply to rkaiq/include/common/rk-isp39-config.h.
+
+--- a/rkaiq/include/common/rk-isp39-config.h
++++ b/rkaiq/include/common/rk-isp39-config.h
+@@ -1793,7 +1793,6 @@
+ 	/* ahb read reg */
+ 	struct isp39_dhaz_stat dhaz;
+ 	struct isp39_bay3d_stat bay3d;
+ 	struct isp32_info2ddr_stat info2ddr;
+-	int buf_bay3d_iir_index;
+ } __attribute__ ((packed));
+ 
+ struct rkisp39_stat_buffer {

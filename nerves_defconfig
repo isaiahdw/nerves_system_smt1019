@@ -103,3 +103,11 @@ BR2_PACKAGE_ALSA_UTILS_SPEAKER_TEST=y
 BR2_PACKAGE_LIBSAMPLERATE=y
 BR2_PACKAGE_ALSA_PLUGINS=y
 BR2_PACKAGE_SMT_AUDIO_DSP=y
+# Camera: GC5035 via rkcif/rkisp (kernel patch 0017). v4l2-ctl + media-ctl
+# for pipeline bring-up/capture; rkaiq is the 3A engine (AE/AWB/ISP control
+# — an application must run rkaiq_3A_server for usable imaging) and camsnap
+# is a lightweight live-view/calibration daemon. See the package READMEs.
+BR2_PACKAGE_LIBV4L=y
+BR2_PACKAGE_LIBV4L_UTILS=y
+BR2_PACKAGE_CAMSNAP=y
+BR2_PACKAGE_RKAIQ=y

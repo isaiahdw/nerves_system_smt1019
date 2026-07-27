@@ -27,6 +27,11 @@ Working:
 - Boot splash: vendor U-Boot draws `logo.bmp` from the resource
   partition at ~2 s and the kernel holds it until a DRM client takes
   over (artwork + generator in `uboot/logo/`)
+- Camera: GC5035 (5 MP, MIPI-CSI) through the rkcif/rkisp pipeline,
+  with the rkaiq 3A engine (prebuilt, tuned GC5035 IQ in
+  `/etc/iqfiles`) and the `camsnap` live-view/calibration daemon. An
+  application must run `rkaiq_3A_server` for usable imaging — see
+  `package/rkaiq/README.md`
 - NPU: validated end to end with librknnrt (2.3.2, matmul API; 558 GOPS
   dense int8 measured). The RK3576S is rated 3 TOPS INT8
   (sparsity-assisted, per its [datasheet](docs/datasheets/rk3576s-soc.pdf))
@@ -40,9 +45,6 @@ Working:
 Not working / not enabled:
 
 - Bluetooth: bring-up pending (UART HCI; `BCM4381A1.hcd` extracted)
-- Camera (GC5035, MIPI-CSI): pipeline disabled in the DT (patches
-  `0006`/`0010`); needs the DT re-enabled plus the Rockchip ISP userspace
-  (`camera_engine_rkaiq`)
 - NFC (NXP PN5xx family, i2c7@0x28): does not ACK on the bus (likely
   needs VEN power-up); needs the NXP userspace stack
 - Thread/802.15.4: the radio module is border-router capable but shares
@@ -193,13 +195,14 @@ The board support is carried as `linux/*.patch`:
 | `0007` | eth0 MAC from Rockchip vendor storage, generated and persisted on first boot |
 | `0008` | Disable the EVB IR-remote decoder |
 | `0009` | Un-alias bcmdhd's MSG log bits from its ERROR bits so `*_msg_level=1` gives errors-only logging |
-| `0010` | Disable the camera D-PHY hardware blocks |
 | `0011` | Keep the WiFi chip powered after module load (firmware downloads once) |
 | `0012` | Point the touch node at the mainline Goodix driver (`goodix,gt9271`, edge-falling IRQ) |
 | `0013` | Enable `usb_drd1` as a USB2 host |
 | `0014` | Demote the drm driver's no-splash "failed to parse loader memory" warn to debug |
 | `0015` | Rename the Mali GPU interrupts to the uppercase names kbase requests (removes probe errors) |
 | `0016` | Quiet the fiq-debugger's expected probe errors in irq mode |
+| `0017` | Enable the GC5035 camera pipeline (board dts, trimmed to the fitted sensor) |
+| `0018` | rkisp v39: guard the LSC config against missing LUT buffers (Oops during 3A restart) |
 
 The configuration is the in-tree `rockchip_linux_defconfig` plus two
 fragments: `linux/rk3576.config` (Mali Bifrost) and `linux/nerves.config`
@@ -260,5 +263,5 @@ Rockchip RK806 PMIC on i2c1@0x23
 | Accelerometer | Kionix KXTJ3 (i2c7@0x0e) — [datasheet](docs/datasheets/kxtj3-accelerometer.pdf) | Userspace via Circuits.I2C; the DT's second footprint (BMA2xx @0x18) is unpopulated |
 | NPU | RKNPU (driver 0.9.8, DRM render node `/dev/dri/renderD129`) | Works with librknnrt 2.3.2; 3 TOPS INT8 rated (500 MHz S bin), 558 GOPS measured dense int8 matmul |
 | NFC | NXP PN5xx family (i2c7@0x28) | Not working — see hardware status |
-| Camera | GC5035 (MIPI-CSI) | Disabled — see hardware status |
+| Camera | GC5035 (MIPI-CSI, 5 MP) | Working: rkcif/rkisp + rkaiq 3A (`package/rkaiq`), `camsnap` live view |
 | io_control | 4 general-purpose GPIOs | Circuits.GPIO |

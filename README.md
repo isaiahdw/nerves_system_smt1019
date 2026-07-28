@@ -249,7 +249,12 @@ receive mDNS multicast.
 ## Hardware
 
 The device is the **ELC (Shenzhen Electron Technology) SMT1019** smart-home
-panel (sold retail as "JEESTON"; FCC ID
+panel (sold retail as "JEESTON" on Amazon —
+[standard](https://www.amazon.com/dp/B0G5YTNQTN) and
+[camera-less](https://www.amazon.com/dp/B0GL27PBWM) variants — and by the
+manufacturer on
+[Alibaba](https://www.alibaba.com/product-detail/SMT97-9-7-inch-Android-13_1601210366559.html)
+under the SMT panel family; FCC ID
 [2ABC5-E0119](https://fccid.io/2ABC5-E0119), hardware `R157-V1.0A`). Per the
 manufacturer's manual: four microphones, 2x2 W box-chamber speakers, RGB LED
 strip, temp/humidity + light sensors, 5 MP camera, PoE, and an in-wall 86-box
